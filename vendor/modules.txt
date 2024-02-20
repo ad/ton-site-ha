@@ -1,0 +1,40 @@
+# github.com/oasisprotocol/curve25519-voi v0.0.0-20220328075252-7dd334e3daae
+## explicit; go 1.17
+github.com/oasisprotocol/curve25519-voi/curve
+github.com/oasisprotocol/curve25519-voi/curve/scalar
+github.com/oasisprotocol/curve25519-voi/internal/disalloweq
+github.com/oasisprotocol/curve25519-voi/internal/field
+github.com/oasisprotocol/curve25519-voi/internal/lattice
+github.com/oasisprotocol/curve25519-voi/internal/scalar128
+github.com/oasisprotocol/curve25519-voi/internal/subtle
+github.com/oasisprotocol/curve25519-voi/internal/toolchain
+github.com/oasisprotocol/curve25519-voi/primitives/ed25519
+github.com/oasisprotocol/curve25519-voi/primitives/x25519
+# github.com/sigurn/crc16 v0.0.0-20211026045750-20ab5afb07e3
+## explicit
+github.com/sigurn/crc16
+# github.com/xssnick/tonutils-go v1.8.9
+## explicit; go 1.18
+github.com/xssnick/tonutils-go/address
+github.com/xssnick/tonutils-go/adnl
+github.com/xssnick/tonutils-go/adnl/address
+github.com/xssnick/tonutils-go/adnl/dht
+github.com/xssnick/tonutils-go/adnl/overlay
+github.com/xssnick/tonutils-go/adnl/rldp
+github.com/xssnick/tonutils-go/adnl/rldp/http
+github.com/xssnick/tonutils-go/adnl/rldp/raptorq
+github.com/xssnick/tonutils-go/adnl/rldp/raptorq/discmath
+github.com/xssnick/tonutils-go/liteclient
+github.com/xssnick/tonutils-go/tl
+github.com/xssnick/tonutils-go/tlb
+github.com/xssnick/tonutils-go/ton
+github.com/xssnick/tonutils-go/ton/dns
+github.com/xssnick/tonutils-go/ton/nft
+github.com/xssnick/tonutils-go/tvm/cell
+# golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064
+## explicit; go 1.17
+golang.org/x/crypto/chacha20
+golang.org/x/crypto/internal/subtle
+# golang.org/x/sys v0.1.0
+## explicit; go 1.17
+golang.org/x/sys/cpu
