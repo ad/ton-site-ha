@@ -26,7 +26,7 @@ func InitConfig(args []string) (*Config, error) {
 	var config = &Config{
 		Key:        "",
 		ListenHost: "",
-		ListenPort: "3333",
+		ListenPort: "9056",
 
 		Debug: false,
 	}

@@ -7,13 +7,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/xssnick/tonutils-go/adnl"
-	"github.com/xssnick/tonutils-go/adnl/dht"
-	rldphttp "github.com/xssnick/tonutils-go/adnl/rldp/http"
 	"io"
 	"log/slog"
 	"net"
 	"net/http"
+
+	"github.com/xssnick/tonutils-go/adnl"
+	"github.com/xssnick/tonutils-go/adnl/dht"
+	rldphttp "github.com/xssnick/tonutils-go/adnl/rldp/http"
 
 	conf "github.com/ad/ton-site-ha/config"
 )
@@ -56,7 +57,7 @@ func InitListener(lgr *slog.Logger, config *conf.Config) (*Listener, error) {
 	}
 
 	mx := http.NewServeMux()
-	mx.HandleFunc("/", handler) //listener.handler
+	mx.HandleFunc("/", listener.handler)
 
 	s := rldphttp.NewServer(key, dhtClient, mx)
 
@@ -88,48 +89,11 @@ func InitListener(lgr *slog.Logger, config *conf.Config) (*Listener, error) {
 	return listener, nil
 }
 
-// func (l *Listener) handler(w http.ResponseWriter, r *http.Request) {
-// 	bodyValue, _ := io.ReadAll(r.Body)
-// 	r.Body.Close()
+func (l *Listener) handler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("%+v\n", r)
 
-// 	result := &models.VkCallbackRequest{}
-// 	errUnmarshal := json.Unmarshal(bodyValue, result)
-
-// 	if errUnmarshal != nil {
-// 		if _, err := io.WriteString(w, "ok"); err != nil {
-// 			l.lgr.Error(fmt.Sprintf("error writing response: %s", err))
-// 		}
-
-// 		return
-// 	}
-
-// 	l.lgr.Debug(fmt.Sprintf("%s: %s", result.Type, string(bodyValue)))
-
-// 	if l.config.VkSecret != "" && result.Secret != l.config.VkSecret {
-// 		l.lgr.Debug(fmt.Sprintf("secret mistmatch %s != %s", l.config.VkSecret, result.Secret))
-// 		l.lgr.Debug(string(bodyValue))
-
-// 		if _, err := io.WriteString(w, "ok"); err != nil {
-// 			l.lgr.Error(fmt.Sprintf("error writing response: %s", err))
-// 		}
-
-// 		return
-// 	}
-
-// 	if result.Type == "confirmation" {
-// 		if _, err := io.WriteString(w, l.config.VkConfirmation); err != nil {
-// 			l.lgr.Error(fmt.Sprintf("error writing response: %s", err))
-// 		}
-
-// 		return
-// 	}
-
-// 	if _, err := io.WriteString(w, "ok"); err != nil {
-// 		l.lgr.Error(fmt.Sprintf("error writing response: %s", err))
-// 	}
-
-// 	_ = l.Sender.ProcessVKMessage(result)
-// }
+	_, _ = w.Write([]byte("Hi, " + request.URL.Query().Get("name") + "\nThis TON site"))
+}
 
 func getKey(data string) (ed25519.PrivateKey, error) {
 	dec, err := hex.DecodeString(data)
@@ -138,11 +102,6 @@ func getKey(data string) (ed25519.PrivateKey, error) {
 	}
 
 	return ed25519.NewKeyFromSeed(dec), nil
-}
-
-func handler(writer http.ResponseWriter, request *http.Request) {
-	_, _ = writer.Write([]byte("Hi, " + request.URL.Query().Get("name") +
-		"\nThis TON site works natively using tonutils-go!"))
 }
 
 func getPublicIP() string {
