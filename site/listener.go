@@ -3,6 +3,7 @@ package site
 import (
 	"context"
 	"crypto/ed25519"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -28,6 +29,11 @@ type serverContextKey string
 const keyServerAddr = "serverAddr"
 
 func InitListener(lgr *slog.Logger, config *conf.Config) (*Listener, error) {
+	key, err := getKey(config.Key)
+	if err != nil {
+		return nil, err
+	}
+
 	listener := &Listener{
 		lgr:    lgr,
 		config: config,
@@ -52,7 +58,7 @@ func InitListener(lgr *slog.Logger, config *conf.Config) (*Listener, error) {
 	mx := http.NewServeMux()
 	mx.HandleFunc("/", handler) //listener.handler
 
-	s := rldphttp.NewServer(ed25519.PrivateKey(config.Key), dhtClient, mx)
+	s := rldphttp.NewServer(key, dhtClient, mx)
 
 	addr, err := rldphttp.SerializeADNLAddress(s.Address())
 	if err != nil {
@@ -124,6 +130,15 @@ func InitListener(lgr *slog.Logger, config *conf.Config) (*Listener, error) {
 
 // 	_ = l.Sender.ProcessVKMessage(result)
 // }
+
+func getKey(data string) (ed25519.PrivateKey, error) {
+	dec, err := hex.DecodeString(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return ed25519.NewKeyFromSeed(dec), nil
+}
 
 func handler(writer http.ResponseWriter, request *http.Request) {
 	_, _ = writer.Write([]byte("Hi, " + request.URL.Query().Get("name") +
