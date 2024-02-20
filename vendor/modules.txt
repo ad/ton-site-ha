@@ -35,10 +35,10 @@ github.com/xssnick/tonutils-go/ton
 github.com/xssnick/tonutils-go/ton/dns
 github.com/xssnick/tonutils-go/ton/nft
 github.com/xssnick/tonutils-go/tvm/cell
-# golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064
-## explicit; go 1.17
+# golang.org/x/crypto v0.17.0
+## explicit; go 1.18
 golang.org/x/crypto/chacha20
-golang.org/x/crypto/internal/subtle
-# golang.org/x/sys v0.1.0
-## explicit; go 1.17
+golang.org/x/crypto/internal/alias
+# golang.org/x/sys v0.15.0
+## explicit; go 1.18
 golang.org/x/sys/cpu
