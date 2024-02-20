@@ -1,5 +1,5 @@
 {
-  "version": "0.0.3",
+  "version": "0.0.4",
   "name": "ton-site-ha",
   "slug": "ton-site-ha",
   "description": "",
@@ -26,7 +26,7 @@
   "hassio_api": true,
   "hassio_role": "default",
   "homeassistant_api": true,
-  "host_network": false,
+  "host_network": true,
   "options": {
     "KEY": "",
     "LISTEN_HOST": "",
