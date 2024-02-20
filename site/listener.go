@@ -92,7 +92,7 @@ func InitListener(lgr *slog.Logger, config *conf.Config) (*Listener, error) {
 func (l *Listener) handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("%+v\n", r)
 
-	_, _ = w.Write([]byte("Hi, " + request.URL.Query().Get("name") + "\nThis TON site"))
+	_, _ = w.Write([]byte("Hi, " + r.URL.Query().Get("name") + "\nThis TON site"))
 }
 
 func getKey(data string) (ed25519.PrivateKey, error) {
