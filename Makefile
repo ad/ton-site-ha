@@ -22,7 +22,7 @@ build:
 publish:
 	@docker buildx create --use --name=crossplat --node=crossplat && \
 	docker buildx build \
-		--platform linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64 \
+		--platform linux/amd64,linux/arm64 \
 		--build-arg="BUILD_VERSION=${BUILD_VERSION}" \
 		--output "type=image,push=true" \
 		--tag $(IMAGE) \
