@@ -66,6 +66,13 @@ func InitListener(lgr *slog.Logger, config *conf.Config) (*Listener, error) {
 		return nil, err
 	}
 
+	addrHex, err := rldphttp.ParseADNLAddress("vdov52s2qyfwe3n5l24mgi7dbeobu2aevlo5xwcusmpbaogd5ljfcpc")
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("addr for TON DNS", hex.EncodeToString(addrHex))
+
 	fmt.Println("Listening on", addr+".adnl")
 	publicIP := getPublicIP()
 	fmt.Println("Public IP:", publicIP)
