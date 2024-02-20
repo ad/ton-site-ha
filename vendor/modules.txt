@@ -1,3 +1,7 @@
+# github.com/joho/godotenv v1.5.1
+## explicit; go 1.12
+github.com/joho/godotenv
+github.com/joho/godotenv/autoload
 # github.com/oasisprotocol/curve25519-voi v0.0.0-20220328075252-7dd334e3daae
 ## explicit; go 1.17
 github.com/oasisprotocol/curve25519-voi/curve

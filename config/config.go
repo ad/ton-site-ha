@@ -47,7 +47,7 @@ func InitConfig(args []string) (*Config, error) {
 
 	if !initFromFile {
 		flags := flag.NewFlagSet(args[0], flag.ContinueOnError)
-		flags.StringVar(&config.Key, "key", lookupEnvOrString("TELEGRAM_TARGET", config.Key), "KEY")
+		flags.StringVar(&config.Key, "key", lookupEnvOrString("KEY", config.Key), "KEY")
 		flags.StringVar(&config.ListenHost, "listenHost", lookupEnvOrString("LISTEN_HOST", config.ListenHost), "LISTEN_HOST")
 		flags.StringVar(&config.ListenPort, "listenPort", lookupEnvOrString("LISTEN_PORT", config.ListenPort), "LISTEN_PORT")
 		flags.BoolVar(&config.Debug, "debug", lookupEnvOrBool("DEBUG", config.Debug), "Debug")
@@ -60,7 +60,7 @@ func InitConfig(args []string) (*Config, error) {
 	if config.Key == "" {
 		key, errGenerateKey := generateKey()
 		if errGenerateKey == nil {
-			fmt.Printf("you can use this one generated for you: %s", key)
+			fmt.Printf("you can use this one generated for you: %s\n", key)
 		}
 		return nil, fmt.Errorf("%s", "key not found in config")
 	}

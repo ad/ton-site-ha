@@ -5,9 +5,9 @@ import (
 	"io"
 	"os"
 
-	conf "github.com/ad/ton-ha-site/config"
-	"github.com/ad/ton-ha-site/logger"
-	site "github.com/ad/ton-ha-site/site"
+	conf "github.com/ad/ton-site-ha/config"
+	"github.com/ad/ton-site-ha/logger"
+	site "github.com/ad/ton-site-ha/site"
 )
 
 var (

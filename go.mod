@@ -1,8 +1,11 @@
 module github.com/ad/ton-site-ha
 
-go 1.22.0
+go 1.22
 
-require github.com/xssnick/tonutils-go v1.8.9
+require (
+	github.com/joho/godotenv v1.5.1
+	github.com/xssnick/tonutils-go v1.8.9
+)
 
 require (
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20220328075252-7dd334e3daae // indirect
