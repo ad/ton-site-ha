@@ -63,7 +63,7 @@ func InitListener(lgr *slog.Logger, config *conf.Config) (*Listener, error) {
 
 	mx := http.NewServeMux()
 	mx.HandleFunc("/", listener.serveTemplate)
-	mx.Handle("/static/", http.StripPrefix("/static/", fs))
+	mx.Handle("/static/", neuter(fs))
 
 	s := rldphttp.NewServer(key, dhtClient, mx)
 
