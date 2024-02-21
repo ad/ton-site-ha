@@ -8,11 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"log/slog"
 	"net"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -22,6 +22,7 @@ import (
 	rldphttp "github.com/xssnick/tonutils-go/adnl/rldp/http"
 
 	conf "github.com/ad/ton-site-ha/config"
+	"github.com/ad/ton-site-ha/site"
 )
 
 type Listener struct {
@@ -57,8 +58,8 @@ func InitListener(lgr *slog.Logger, config *conf.Config) (*Listener, error) {
 		return nil, err
 	}
 
-	fs := http.FileServer(http.Dir("site/static"))
-	// http.Handle("/static/", http.StripPrefix("/static/", fs))
+	fs := http.FileServer(http.FS(site.Static))
+	// http.Handle("/static/", neuter(fs))
 
 	mx := http.NewServeMux()
 	mx.HandleFunc("/", listener.serveTemplate)
@@ -114,47 +115,24 @@ func InitListener(lgr *slog.Logger, config *conf.Config) (*Listener, error) {
 func (l *Listener) serveTemplate(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("%+v\n", r)
 
-	fmt.Printf("%s - %s\n", r.URL.Path, r.RequestURI)
-
-	if r.URL.Path == "" && r.RequestURI != "" {
-		r.URL.Path = r.RequestURI
-	}
-
 	if r.URL.Path == "" || r.URL.Path == "/" || strings.HasPrefix(r.URL.Path, "/?") {
 		r.URL.Path = "/index.html"
 	}
 
-	lp := filepath.Join("site/templates", "layout.html")
-	fp := filepath.Join("site/templates", filepath.Clean(r.URL.Path))
+	lp := filepath.Join("templates", "layout.html")
+	fp := filepath.Join("templates", filepath.Clean(r.URL.Path))
 
-	// Return a 404 if the template doesn't exist
-	info, err := os.Stat(fp)
+	tmpl, err := template.New("base.html").ParseFS(site.Templates, lp, fp)
 	if err != nil {
-		if os.IsNotExist(err) {
-			http.NotFound(w, r)
-			return
-		}
-	}
-
-	// Return a 404 if the request is for a directory
-	if info.IsDir() {
-		http.NotFound(w, r)
-		return
-	}
-
-	tmpl, err := template.ParseFiles(lp, fp)
-	if err != nil {
-		// Log the detailed error
 		log.Print(err.Error())
-		// Return a generic "Internal Server Error" message
-		http.Error(w, http.StatusText(500), 500)
+		http.Error(w, http.StatusText(404), 404)
 		return
 	}
 
 	err = tmpl.ExecuteTemplate(w, "layout", nil)
 	if err != nil {
 		log.Print(err.Error())
-		http.Error(w, http.StatusText(500), 500)
+		http.Error(w, http.StatusText(404), 404)
 	}
 }
 
@@ -185,4 +163,24 @@ func getPublicIP() string {
 	_ = json.Unmarshal(body, &ip)
 
 	return ip.Query
+}
+
+func SubAndWrapFS(fSys fs.FS, dir string) http.FileSystem {
+	fSys, err := fs.Sub(fSys, dir)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return http.FS(fSys)
+}
+
+func neuter(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/") {
+			http.NotFound(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
