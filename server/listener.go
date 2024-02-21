@@ -114,6 +114,12 @@ func InitListener(lgr *slog.Logger, config *conf.Config) (*Listener, error) {
 func (l *Listener) serveTemplate(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("%+v\n", r)
 
+	fmt.Printf("%s - %s\n", r.URL.Path, r.RequestURI)
+
+	if r.URL.Path == "" && r.RequestURI != "" {
+		r.URL.Path = r.RequestURI
+	}
+
 	if r.URL.Path == "" || r.URL.Path == "/" || strings.HasPrefix(r.URL.Path, "/?") {
 		r.URL.Path = "/index.html"
 	}
