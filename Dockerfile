@@ -1,18 +1,25 @@
-FROM --platform=${BUILDPLATFORM:-linux/amd64} danielapatin/homeassistant-addon-golang-template as builder
+FROM golang:alpine AS builder
+
+RUN apk update && apk add --no-cache ca-certificates && update-ca-certificates
 
 ARG BUILD_VERSION
-ARG TARGETPLATFORM
-ARG BUILDPLATFORM
-ARG TARGETOS
-ARG TARGETARCH
 
 WORKDIR $GOPATH/src/app
-COPY . .
+COPY go.mod go.mod
+COPY go.sum go.sum
+COPY vendor vendor
+COPY app app
+COPY config config
+COPY logger logger
+COPY site site
+COPY main.go main.go
+COPY draw.go draw.go
+COPY polygons.go polygons.go
 COPY config.json /config.json
-RUN echo "Building for ${TARGETOS}/${TARGETARCH} with version ${BUILD_VERSION}"
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-w -s -X main.version=${BUILD_VERSION}" -o /go/bin/app main.go
+RUN go version
+RUN CGO_ENABLED=0 go build -mod vendor -ldflags="-w -s -X main.version=${BUILD_VERSION}" -o /go/bin/app .
 
-FROM --platform=${TARGETPLATFORM:-linux/amd64} scratch
+FROM scratch
 WORKDIR /app/
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /etc/passwd /etc/passwd
