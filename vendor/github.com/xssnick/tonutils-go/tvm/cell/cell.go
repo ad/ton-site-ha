@@ -35,22 +35,14 @@ type Cell struct {
 }
 
 func (c *Cell) copy() *Cell {
-	// copy data
-	data := append([]byte{}, c.data...)
-
-	refs := make([]*Cell, len(c.refs))
-	for i, ref := range c.refs {
-		refs[i] = ref.copy()
-	}
-
 	return &Cell{
 		special:     c.special,
 		levelMask:   c.levelMask,
 		bitsSz:      c.bitsSz,
-		data:        data,
-		hashes:      c.hashes,
-		depthLevels: c.depthLevels,
-		refs:        refs,
+		data:        append([]byte{}, c.data...),
+		hashes:      append([]byte{}, c.hashes...),
+		depthLevels: append([]uint16{}, c.depthLevels...),
+		refs:        append([]*Cell{}, c.refs...),
 	}
 }
 
@@ -93,6 +85,7 @@ func (c *Cell) MustPeekRef(i int) *Cell {
 func (c *Cell) UnsafeModify(levelMask LevelMask, special bool) {
 	c.special = special
 	c.levelMask = levelMask
+	c.calculateHashes()
 }
 
 func (c *Cell) PeekRef(i int) (*Cell, error) {
@@ -103,24 +96,24 @@ func (c *Cell) PeekRef(i int) (*Cell, error) {
 }
 
 func (c *Cell) Dump(limitLength ...int) string {
-	var lim = (1024 << 20) * 16
+	var lim = uint64(1024<<20) * 16
 	if len(limitLength) > 0 {
 		// 16 MB default lim
-		lim = limitLength[0]
+		lim = uint64(limitLength[0])
 	}
 	return c.dump(0, false, lim)
 }
 
 func (c *Cell) DumpBits(limitLength ...int) string {
-	var lim = (1024 << 20) * 16
+	var lim = uint64(1024<<20) * 16
 	if len(limitLength) > 0 {
 		// 16 MB default lim
-		lim = limitLength[0]
+		lim = uint64(limitLength[0])
 	}
 	return c.dump(0, true, lim)
 }
 
-func (c *Cell) dump(deep int, bin bool, limitLength int) string {
+func (c *Cell) dump(deep int, bin bool, limitLength uint64) string {
 	sz, data, _ := c.BeginParse().RestBits()
 
 	var val string
@@ -156,14 +149,14 @@ func (c *Cell) dump(deep int, bin bool, limitLength int) string {
 				str += ","
 			}
 
-			if len(str) > limitLength {
+			if uint64(len(str)) > limitLength {
 				break
 			}
 		}
 		str += strings.Repeat("  ", deep) + "}"
 	}
 
-	if len(str) > limitLength {
+	if uint64(len(str)) > limitLength {
 		str = str[:limitLength]
 	}
 
@@ -176,9 +169,16 @@ const _DataCellMaxLevel = 3
 // Once calculated, it is cached and can be reused cheap.
 func (c *Cell) Hash(level ...int) []byte {
 	if len(level) > 0 {
-		return c.getHash(level[0])
+		return append([]byte{}, c.getHash(level[0])...)
 	}
-	return c.getHash(_DataCellMaxLevel)
+	return append([]byte{}, c.getHash(_DataCellMaxLevel)...)
+}
+
+func (c *Cell) Depth(level ...int) uint16 {
+	if len(level) > 0 {
+		return c.getDepth(level[0])
+	}
+	return c.getDepth(_DataCellMaxLevel)
 }
 
 func (c *Cell) Sign(key ed25519.PrivateKey) []byte {

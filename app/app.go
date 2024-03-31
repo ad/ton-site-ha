@@ -7,7 +7,7 @@ import (
 
 	conf "github.com/ad/ton-site-ha/config"
 	"github.com/ad/ton-site-ha/logger"
-	site "github.com/ad/ton-site-ha/site"
+	server "github.com/ad/ton-site-ha/server"
 )
 
 var (
@@ -24,7 +24,7 @@ func Run(ctx context.Context, w io.Writer, args []string) error {
 
 	lgr := logger.InitLogger(config.Debug)
 
-	_, errInitListener := site.InitListener(lgr, config)
+	_, errInitListener := server.InitListener(lgr, config)
 	if errInitListener != nil {
 		return errInitListener
 	}
