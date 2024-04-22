@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/joho/godotenv v1.5.1
-	github.com/xssnick/tonutils-go v1.9.4
+	github.com/xssnick/tonutils-go v1.9.5
 )
 
 require (
