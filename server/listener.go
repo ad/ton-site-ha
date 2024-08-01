@@ -145,6 +145,11 @@ func (l *Listener) serveTemplate(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Encoding", "gzip")
 
+	w.Header().Set("Accept-Ranges", "bytes")
+	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("Ton-Proxy-Site-Version", "Commit: "+l.config.Version)
+	w.Header().Set("Vary", "Accept-Encoding")
+
 	gz := gzip.NewWriter(w)
 	defer gz.Close()
 
