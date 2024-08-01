@@ -150,6 +150,7 @@ func (l *Listener) serveTemplate(w http.ResponseWriter, r *http.Request) {
 
 	err = tmpl.ExecuteTemplate(gz, "layout", nil)
 	if err != nil {
+		log.Print(err.Error())
 		http.Error(w, http.StatusText(404), 404)
 
 		return
