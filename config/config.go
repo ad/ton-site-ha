@@ -16,14 +16,16 @@ const ConfigFileName = "/data/options.json"
 
 // Config ...
 type Config struct {
+	Version    string `json:"VERSION"`
 	Key        string `json:"KEY"`
 	ListenHost string `json:"LISTEN_HOST"`
 	ListenPort string `json:"LISTEN_PORT"`
 	Debug      bool   `json:"DEBUG"`
 }
 
-func InitConfig(args []string) (*Config, error) {
+func InitConfig(args []string, version string) (*Config, error) {
 	var config = &Config{
+		Version:    version,
 		Key:        "",
 		ListenHost: "",
 		ListenPort: "9056",

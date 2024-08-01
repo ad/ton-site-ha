@@ -27,7 +27,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
 
-	if err := app.Run(ctx, os.Stdout, os.Args); err != nil {
+	if err := app.Run(ctx, os.Stdout, os.Args, version); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}

@@ -14,8 +14,8 @@ var (
 	config *conf.Config
 )
 
-func Run(ctx context.Context, w io.Writer, args []string) error {
-	confLoad, errInitConfig := conf.InitConfig(os.Args)
+func Run(ctx context.Context, w io.Writer, args []string, version string) error {
+	confLoad, errInitConfig := conf.InitConfig(os.Args, version)
 	if errInitConfig != nil {
 		return errInitConfig
 	}
