@@ -286,7 +286,7 @@ func (t *Transport) RoundTrip(request *http.Request) (_ *http.Response, err erro
 		ID:      qid,
 		Method:  request.Method,
 		URL:     request.URL.String(),
-		Version: "HTTP/1.0",
+		Version: request.Proto,
 		Headers: []Header{
 			{
 				Name:  "Host",
@@ -371,7 +371,7 @@ func (t *Transport) RoundTrip(request *http.Request) (_ *http.Response, err erro
 	httpResp := &http.Response{
 		Status:        res.Reason,
 		StatusCode:    int(res.StatusCode),
-		Proto:         "HTTP/1.0",
+		Proto:         req.Version,
 		ProtoMajor:    1,
 		ProtoMinor:    1,
 		Header:        map[string][]string{},
