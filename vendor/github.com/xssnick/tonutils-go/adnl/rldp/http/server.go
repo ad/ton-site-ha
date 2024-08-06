@@ -6,10 +6,6 @@ import (
 	"crypto/ed25519"
 	"encoding/hex"
 	"fmt"
-	"github.com/xssnick/tonutils-go/adnl"
-	"github.com/xssnick/tonutils-go/adnl/address"
-	"github.com/xssnick/tonutils-go/adnl/rldp"
-	"github.com/xssnick/tonutils-go/tl"
 	"io"
 	"log"
 	"net"
@@ -21,6 +17,11 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/xssnick/tonutils-go/adnl"
+	"github.com/xssnick/tonutils-go/adnl/address"
+	"github.com/xssnick/tonutils-go/adnl/rldp"
+	"github.com/xssnick/tonutils-go/tl"
 )
 
 type ADNLGateway interface {
@@ -445,7 +446,7 @@ func (w *writerBuff) flush(payload []byte) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	err := w.client.SendAnswer(ctx, w.maxAnswerSz, w.queryId, w.transferId, Response{
-		Version:    "HTTP/1.1",
+		Version:    "HTTP/1.0",
 		StatusCode: int32(w.resp.statusCode),
 		Reason:     http.StatusText(w.resp.statusCode),
 		Headers:    headers,

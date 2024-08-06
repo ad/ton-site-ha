@@ -7,11 +7,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/xssnick/tonutils-go/adnl"
-	"github.com/xssnick/tonutils-go/adnl/address"
-	"github.com/xssnick/tonutils-go/adnl/rldp"
-	"github.com/xssnick/tonutils-go/tl"
-	"github.com/xssnick/tonutils-go/ton/dns"
 	"io"
 	"net/http"
 	"reflect"
@@ -19,6 +14,12 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/xssnick/tonutils-go/adnl"
+	"github.com/xssnick/tonutils-go/adnl/address"
+	"github.com/xssnick/tonutils-go/adnl/rldp"
+	"github.com/xssnick/tonutils-go/tl"
+	"github.com/xssnick/tonutils-go/ton/dns"
 )
 
 const _ChunkSize = 1 << 17
@@ -285,7 +286,7 @@ func (t *Transport) RoundTrip(request *http.Request) (_ *http.Response, err erro
 		ID:      qid,
 		Method:  request.Method,
 		URL:     request.URL.String(),
-		Version: "HTTP/1.1",
+		Version: "HTTP/1.0",
 		Headers: []Header{
 			{
 				Name:  "Host",
@@ -370,7 +371,7 @@ func (t *Transport) RoundTrip(request *http.Request) (_ *http.Response, err erro
 	httpResp := &http.Response{
 		Status:        res.Reason,
 		StatusCode:    int(res.StatusCode),
-		Proto:         "HTTP/1.1",
+		Proto:         "HTTP/1.0",
 		ProtoMajor:    1,
 		ProtoMinor:    1,
 		Header:        map[string][]string{},
