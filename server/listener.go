@@ -53,7 +53,7 @@ func InitListener(lgr *slog.Logger, config *conf.Config) (*Listener, error) {
 		return nil, err
 	}
 
-	dhtClient, err := dht.NewClientFromConfigUrl(context.Background(), gateway, "https://ton.org/global.config.json")
+	dhtClient, err := dht.NewClientFromConfigUrl(context.Background(), gateway, "https://tonutils.com/ls/free-mainnet-config.json")
 	if err != nil {
 		return nil, err
 	}
@@ -82,6 +82,7 @@ func InitListener(lgr *slog.Logger, config *conf.Config) (*Listener, error) {
 	fmt.Println("Public IP:", publicIP)
 	fmt.Println("addr for TON DNS", hex.EncodeToString(addrHex))
 	fmt.Println("Listening on", addr+".adnl")
+	fmt.Println("priv key seed", key.Seed())
 
 	s.SetExternalIP(net.ParseIP(publicIP))
 
