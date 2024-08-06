@@ -1,7 +1,6 @@
 package server
 
 import (
-	"compress/gzip"
 	"context"
 	"crypto/ed25519"
 	"encoding/hex"
@@ -131,29 +130,7 @@ func (l *Listener) serveTemplate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
-		err = tmpl.ExecuteTemplate(w, "layout", nil)
-		if err != nil {
-			log.Print(err.Error())
-			http.Error(w, http.StatusText(404), 404)
-
-			return
-		}
-
-		return
-	}
-
-	w.Header().Set("Content-Encoding", "gzip")
-
-	w.Header().Set("Accept-Ranges", "bytes")
-	w.Header().Set("Content-Type", "text/html")
-	w.Header().Set("Ton-Proxy-Site-Version", "Commit: "+l.config.Version)
-	w.Header().Set("Vary", "Accept-Encoding")
-
-	gz := gzip.NewWriter(w)
-	defer gz.Close()
-
-	err = tmpl.ExecuteTemplate(gz, "layout", nil)
+	err = tmpl.ExecuteTemplate(w, "layout", nil)
 	if err != nil {
 		log.Print(err.Error())
 		http.Error(w, http.StatusText(404), 404)
@@ -161,9 +138,32 @@ func (l *Listener) serveTemplate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Transfer-Encoding:	chunked
-	// Last-Modified: Tue, 23 Jul 2024 21:13:17 GMT
-	// Etag: W/"66a01ced-730"
+	return
+
+	// if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+	// }
+
+	// w.Header().Set("Content-Encoding", "gzip")
+
+	// w.Header().Set("Accept-Ranges", "bytes")
+	// w.Header().Set("Content-Type", "text/html")
+	// w.Header().Set("Ton-Proxy-Site-Version", "Commit: "+l.config.Version)
+	// w.Header().Set("Vary", "Accept-Encoding")
+
+	// gz := gzip.NewWriter(w)
+	// defer gz.Close()
+
+	// err = tmpl.ExecuteTemplate(gz, "layout", nil)
+	// if err != nil {
+	// 	log.Print(err.Error())
+	// 	http.Error(w, http.StatusText(404), 404)
+
+	// 	return
+	// }
+
+	// // Transfer-Encoding:	chunked
+	// // Last-Modified: Tue, 23 Jul 2024 21:13:17 GMT
+	// // Etag: W/"66a01ced-730"
 }
 
 func getKey(data string) (ed25519.PrivateKey, error) {
