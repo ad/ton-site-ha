@@ -56,7 +56,8 @@ type writerBuff struct {
 	server *Server
 	stream *dataStreamer
 
-	resp *respWriter
+	resp      *respWriter
+	respProto string
 
 	headerSent bool
 	handled    bool
@@ -300,6 +301,7 @@ func (s *Server) handle(client RLDP, adnlId, addr string) func(transferId []byte
 				queryId:     query.ID,
 				requestId:   req.ID,
 				transferId:  transferId,
+				respProto:   req.Version,
 			}
 
 			w := &respWriter{
@@ -446,7 +448,7 @@ func (w *writerBuff) flush(payload []byte) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	err := w.client.SendAnswer(ctx, w.maxAnswerSz, w.queryId, w.transferId, Response{
-		Version:    "HTTP/1.1",
+		Version:    w.respProto,
 		StatusCode: int32(w.resp.statusCode),
 		Reason:     http.StatusText(w.resp.statusCode),
 		Headers:    headers,
