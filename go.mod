@@ -1,15 +1,15 @@
 module github.com/ad/ton-site-ha
 
-go 1.22
+go 1.19
 
 require (
 	github.com/joho/godotenv v1.5.1
-	github.com/xssnick/tonutils-go v1.9.9
+	github.com/xssnick/tonutils-go v1.9.9-0.20240729172752-0ce0d252a288
 )
 
 require (
-	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect
-	github.com/sigurn/crc16 v0.0.0-20240131213347-83fcde1e29d1 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
+	github.com/oasisprotocol/curve25519-voi v0.0.0-20220328075252-7dd334e3daae // indirect
+	github.com/sigurn/crc16 v0.0.0-20211026045750-20ab5afb07e3 // indirect
+	golang.org/x/crypto v0.17.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
 )

@@ -6,6 +6,10 @@ import (
 	"crypto/ed25519"
 	"encoding/hex"
 	"fmt"
+	"github.com/xssnick/tonutils-go/adnl"
+	"github.com/xssnick/tonutils-go/adnl/address"
+	"github.com/xssnick/tonutils-go/adnl/rldp"
+	"github.com/xssnick/tonutils-go/tl"
 	"io"
 	"log"
 	"net"
@@ -17,11 +21,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/xssnick/tonutils-go/adnl"
-	"github.com/xssnick/tonutils-go/adnl/address"
-	"github.com/xssnick/tonutils-go/adnl/rldp"
-	"github.com/xssnick/tonutils-go/tl"
 )
 
 type ADNLGateway interface {
@@ -56,8 +55,7 @@ type writerBuff struct {
 	server *Server
 	stream *dataStreamer
 
-	resp      *respWriter
-	respProto string
+	resp *respWriter
 
 	headerSent bool
 	handled    bool
@@ -159,7 +157,7 @@ func (s *Server) ListenAndServe(listenAddr string) error {
 			switch query.Data.(type) {
 			case GetCapabilities:
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-				err := client.Answer(ctx, query.ID, &Capabilities{Value: CapabilityRLDP2})
+				err := client.Answer(ctx, query.ID, &Capabilities{Value: 0}) // CapabilityRLDP2
 				cancel()
 				if err != nil {
 					return fmt.Errorf("failed to send capabilities answer: %w", err)
@@ -238,11 +236,15 @@ func (s *Server) handle(client RLDP, adnlId, addr string) func(transferId []byte
 			if err != nil {
 				return fmt.Errorf("failed to parse url `%s`: %w", uri, err)
 			}
+			uri.Scheme = "http"
 
 			contentLen := int64(-1)
 			headers := http.Header{}
 			for _, header := range req.Headers {
-				if header.Name == "Content-Length" {
+				name := http.CanonicalHeaderKey(header.Name)
+				if name == "Host" {
+					uri.Host = header.Value
+				} else if name == "Content-Length" {
 					contentLen, err = strconv.ParseInt(header.Value, 10, 64)
 					if err != nil {
 						return fmt.Errorf("failed to parse content len `%s`: %w", header.Value, err)
@@ -252,7 +254,8 @@ func (s *Server) handle(client RLDP, adnlId, addr string) func(transferId []byte
 						return fmt.Errorf("failed to parse content len: should be >= 0")
 					}
 				}
-				headers[header.Name] = append(headers[header.Name], header.Value)
+
+				headers[name] = append(headers[name], header.Value)
 			}
 			headers.Set("X-Adnl-Ip", netAddr.IP.String())
 			headers.Set("X-Adnl-Id", adnlId)
@@ -301,7 +304,6 @@ func (s *Server) handle(client RLDP, adnlId, addr string) func(transferId []byte
 				queryId:     query.ID,
 				requestId:   req.ID,
 				transferId:  transferId,
-				respProto:   req.Version,
 			}
 
 			w := &respWriter{
@@ -448,7 +450,7 @@ func (w *writerBuff) flush(payload []byte) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	err := w.client.SendAnswer(ctx, w.maxAnswerSz, w.queryId, w.transferId, Response{
-		Version:    w.respProto,
+		Version:    "HTTP/1.1",
 		StatusCode: int32(w.resp.statusCode),
 		Reason:     http.StatusText(w.resp.statusCode),
 		Headers:    headers,
