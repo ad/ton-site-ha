@@ -8,14 +8,10 @@ WORKDIR $GOPATH/src/app
 COPY go.mod go.mod
 COPY go.sum go.sum
 COPY vendor vendor
-COPY app app
 COPY config config
-COPY logger logger
-COPY server server
 COPY site site
 COPY main.go main.go
 COPY config.json /config.json
-RUN go version
 RUN CGO_ENABLED=0 go build -mod vendor -ldflags="-w -s -X main.version=${BUILD_VERSION}" -o /go/bin/app .
 
 FROM scratch
