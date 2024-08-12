@@ -162,9 +162,9 @@ func parsePacket(data []byte) (_ *PacketContent, err error) {
 		data = data[4:]
 		packet.ReinitDate = &reinit
 
-		dstReinit := int32(binary.LittleEndian.Uint32(data))
+		reinit = int32(binary.LittleEndian.Uint32(data))
 		data = data[4:]
-		packet.DstReinitDate = &dstReinit
+		packet.DstReinitDate = &reinit
 	}
 
 	if flags&_FlagSignature != 0 {
