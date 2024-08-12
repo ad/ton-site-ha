@@ -157,7 +157,7 @@ func (s *Server) ListenAndServe(listenAddr string) error {
 			switch query.Data.(type) {
 			case GetCapabilities:
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-				err := client.Answer(ctx, query.ID, &Capabilities{Value: 0}) // CapabilityRLDP2
+				err := client.Answer(ctx, query.ID, &Capabilities{Value: CapabilityRLDP2})
 				cancel()
 				if err != nil {
 					return fmt.Errorf("failed to send capabilities answer: %w", err)
@@ -236,15 +236,11 @@ func (s *Server) handle(client RLDP, adnlId, addr string) func(transferId []byte
 			if err != nil {
 				return fmt.Errorf("failed to parse url `%s`: %w", uri, err)
 			}
-			uri.Scheme = "http"
 
 			contentLen := int64(-1)
 			headers := http.Header{}
 			for _, header := range req.Headers {
-				name := http.CanonicalHeaderKey(header.Name)
-				if name == "Host" {
-					uri.Host = header.Value
-				} else if name == "Content-Length" {
+				if header.Name == "Content-Length" {
 					contentLen, err = strconv.ParseInt(header.Value, 10, 64)
 					if err != nil {
 						return fmt.Errorf("failed to parse content len `%s`: %w", header.Value, err)
@@ -254,8 +250,7 @@ func (s *Server) handle(client RLDP, adnlId, addr string) func(transferId []byte
 						return fmt.Errorf("failed to parse content len: should be >= 0")
 					}
 				}
-
-				headers[name] = append(headers[name], header.Value)
+				headers[header.Name] = append(headers[header.Name], header.Value)
 			}
 			headers.Set("X-Adnl-Ip", netAddr.IP.String())
 			headers.Set("X-Adnl-Id", adnlId)

@@ -146,24 +146,6 @@ func (c *Channel) process(buf []byte) error {
 
 func (a *ADNL) processPacket(packet *PacketContent, ch *Channel) (err error) {
 	a.mx.Lock()
-
-	if packet.DstReinitDate != nil && *packet.DstReinitDate > 0 && *packet.DstReinitDate < a.reinitTime {
-		if packet.ReinitDate != nil {
-			a.dstReinit = *packet.ReinitDate
-		}
-		a.mx.Unlock()
-
-		buf, err := a.buildRequest(ch, MessageNop{})
-		if err != nil {
-			return fmt.Errorf("failed to create packet: %w", err)
-		}
-		if err = a.send(context.Background(), buf); err != nil {
-			return fmt.Errorf("failed to send ping reinit: %w", err)
-		}
-
-		return nil
-	}
-
 	seqno := uint64(*packet.Seqno)
 	a.lastReceiveAt = time.Now()
 
@@ -179,14 +161,17 @@ func (a *ADNL) processPacket(packet *PacketContent, ch *Channel) (err error) {
 		a.confirmSeqno = seqno
 	}
 
-	if (packet.ReinitDate != nil && *packet.ReinitDate > a.dstReinit) &&
-		(packet.DstReinitDate != nil && *packet.DstReinitDate == a.reinitTime) {
+	if packet.ReinitDate != nil && *packet.ReinitDate > a.dstReinit {
 		// reset their seqno even if it is lower,
 		// because other side could lose counter
 		a.confirmSeqno = seqno
 		a.loss = 0
 
-		a.dstReinit = *packet.ReinitDate
+		// a.dstReinit = *packet.ReinitDate
+		// a.seqno = 0
+		//	a.channel = nil
+		//	a.confirmSeqno = 0
+		//	a.reinitTime = a.dstReinit
 	}
 
 	if packet.RecvPriorityAddrListVersion != nil {
@@ -344,8 +329,6 @@ func (a *ADNL) processMessage(message any, ch *Channel) error {
 				return fmt.Errorf("failed to handle custom message: %w", err)
 			}
 		}
-	case MessageNop:
-		return nil
 	default:
 		return fmt.Errorf("skipped unprocessable message of type %s", reflect.TypeOf(message).String())
 	}

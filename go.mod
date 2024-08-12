@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/joho/godotenv v1.5.1
-	github.com/xssnick/tonutils-go v1.9.9-0.20240729172752-0ce0d252a288
+	github.com/xssnick/tonutils-go v1.9.9
 )
 
 require (

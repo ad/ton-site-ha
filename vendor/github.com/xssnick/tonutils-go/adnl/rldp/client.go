@@ -357,9 +357,6 @@ func (r *RLDP) sendMessageParts(ctx context.Context, transferId, data []byte) er
 
 		if symbolsSent > fastSymbols {
 			x := (symbolsSent - fastSymbols) / 2
-			if x > 70 { // 7 ms max delay
-				x = 70
-			}
 
 			select {
 			case <-ctx.Done():
@@ -368,7 +365,7 @@ func (r *RLDP) sendMessageParts(ctx context.Context, transferId, data []byte) er
 			case <-ch:
 				// we got complete from receiver, finish sending
 				return nil
-			case <-time.After(time.Duration(x) * (time.Millisecond / 10)):
+			case <-time.After(time.Duration(x) * _PacketWaitTime):
 				// send additional FEC recovery parts until complete
 			}
 		}
