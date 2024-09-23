@@ -17,7 +17,7 @@ github.com/oasisprotocol/curve25519-voi/primitives/x25519
 # github.com/sigurn/crc16 v0.0.0-20211026045750-20ab5afb07e3
 ## explicit
 github.com/sigurn/crc16
-# github.com/xssnick/tonutils-go v1.10.0
+# github.com/xssnick/tonutils-go v1.10.2
 ## explicit; go 1.18
 github.com/xssnick/tonutils-go/address
 github.com/xssnick/tonutils-go/adnl
