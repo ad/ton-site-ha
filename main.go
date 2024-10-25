@@ -46,7 +46,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	netCfg, err := liteclient.GetConfigFromUrl(context.Background(), "https://tonutils.com/ls/free-mainnet-config.json")
+	// https://tonutils.com/ls/free-mainnet-config.json
+	netCfg, err := liteclient.GetConfigFromUrl(context.Background(), "https://ton.org/global.config.json")
 	if err != nil {
 		log.Println("failed to download ton config:", err.Error(), "; we will take it from static cache")
 		os.Exit(1)
