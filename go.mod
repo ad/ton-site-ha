@@ -1,6 +1,6 @@
 module github.com/ad/ton-site-ha
 
-go 1.19
+go 1.24.0
 
 require (
 	github.com/joho/godotenv v1.5.1
@@ -10,6 +10,6 @@ require (
 require (
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect
 	github.com/sigurn/crc16 v0.0.0-20240131213347-83fcde1e29d1 // indirect
-	golang.org/x/crypto v0.35.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 )
