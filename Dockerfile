@@ -9,6 +9,7 @@ COPY go.mod go.mod
 COPY go.sum go.sum
 COPY vendor vendor
 COPY config config
+COPY internal internal
 COPY site site
 COPY main.go main.go
 COPY config.json /config.json
