@@ -1,31 +1,61 @@
 package tl
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
 )
 
-func ToBytes(buf []byte) []byte {
-	var data []byte
+func ToBytesToBuffer(buf *bytes.Buffer, data []byte) error {
+	if len(data) == 0 {
+		// fast path for empty slice
+		buf.Write(make([]byte, 4))
+		return nil
+	}
+
+	prevLen := buf.Len()
 
 	// store buf length
-	if len(buf) >= 0xFE {
+	if len(data) >= 0xFE {
+		if len(data) >= 1<<24 {
+			return fmt.Errorf("too big bytes len, TL bytes array limited by 1<<24")
+		}
+
 		ln := make([]byte, 4)
-		binary.LittleEndian.PutUint32(ln, uint32(len(buf)<<8)|0xFE)
-		data = append(data, ln...)
+		binary.LittleEndian.PutUint32(ln, uint32(len(data)<<8)|0xFE)
+		buf.Write(ln)
 	} else {
-		data = append(data, byte(len(buf)))
+		buf.WriteByte(byte(len(data)))
 	}
 
-	data = append(data, buf...)
+	buf.Write(data)
 
 	// adjust actual length to fit % 4 = 0
-	if round := len(data) % 4; round != 0 {
-		data = append(data, make([]byte, 4-round)...)
+	if round := (buf.Len() - prevLen) % 4; round != 0 {
+		for i := 0; i < 4-round; i++ {
+			buf.WriteByte(0)
+		}
+	}
+	return nil
+}
+
+func RemapBufferAsSlice(buf *bytes.Buffer, from int) {
+	serializedLen := buf.Len() - (from + 4)
+
+	bufPtr := buf.Bytes()
+	if serializedLen >= 0xFE {
+		binary.LittleEndian.PutUint32(bufPtr[from:], uint32(serializedLen<<8)|0xFE)
+	} else {
+		bufPtr[from] = byte(serializedLen)
+		copy(bufPtr[from+1:], bufPtr[from+4:])
+		buf.Truncate(buf.Len() - 3)
 	}
 
-	return data
+	// bytes array padding
+	if pad := (buf.Len() - from) % 4; pad > 0 {
+		buf.Write(make([]byte, 4-pad))
+	}
 }
 
 func FromBytes(data []byte) (loaded []byte, buffer []byte, err error) {

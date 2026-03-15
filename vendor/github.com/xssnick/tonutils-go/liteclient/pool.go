@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
-	"errors"
 	"fmt"
 	"io"
 	mRand "math/rand"
@@ -18,17 +17,16 @@ import (
 
 const _StickyCtxKey = "_ton_node_sticky"
 const _StickyCtxUsedNodesKey = "_ton_used_nodes_sticky"
-
-var (
-	ErrNoActiveConnections = errors.New("no active connections")
-	ErrADNLReqTimeout      = errors.New("adnl request timeout")
-	ErrNoNodesLeft         = errors.New("no more active nodes left")
-)
+const CtxLSInfoKey = "_ls_info"
 
 type OnDisconnectCallback func(addr, key string)
 
 type ADNLResponse struct {
 	Data tl.Serializable
+}
+
+type LSInfo struct {
+	Details string
 }
 
 type ADNLRequest struct {
@@ -54,13 +52,19 @@ type ConnectionPool struct {
 
 // NewConnectionPool - ordinary pool to query liteserver
 func NewConnectionPool() *ConnectionPool {
+	// new protocol requires auth, at least with some key
+	_, authKey, _ := ed25519.GenerateKey(nil)
+
 	c := &ConnectionPool{
 		activeReqs: map[string]*ADNLRequest{},
+		authKey:    authKey,
 	}
 
 	// default reconnect policy
 	c.SetOnDisconnect(c.DefaultReconnect(3*time.Second, -1))
 	c.globalCtx, c.stop = context.WithCancel(context.Background())
+
+	go c.startPings(5 * time.Second)
 
 	return c
 }
@@ -242,8 +246,18 @@ func (c *ConnectionPool) QueryADNL(ctx context.Context, request tl.Serializable,
 	// wait for response
 	select {
 	case resp := <-ch:
+		took := time.Since(tm)
 		atomic.AddInt64(&node.weight, 1)
-		atomic.StoreInt64(&node.lastRespTime, int64(time.Since(tm)))
+		atomic.StoreInt64(&node.lastRespTime, int64(took))
+
+		if inf, ok := ctx.Value(CtxLSInfoKey).(*LSInfo); ok && inf != nil {
+			str := fmt.Sprintf("(%s, took: %d ms)", node.addr, took.Milliseconds())
+			if inf.Details != "" {
+				inf.Details += ", " + str
+			} else {
+				inf.Details = str
+			}
+		}
 
 		reflect.ValueOf(result).Elem().Set(reflect.ValueOf(resp.Data))
 		return nil

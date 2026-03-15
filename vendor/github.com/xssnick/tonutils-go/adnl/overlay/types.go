@@ -4,7 +4,7 @@ import (
 	"crypto/ed25519"
 	"encoding/hex"
 	"fmt"
-	"github.com/xssnick/tonutils-go/adnl"
+	"github.com/xssnick/tonutils-go/adnl/keys"
 	"github.com/xssnick/tonutils-go/tl"
 	"reflect"
 	"time"
@@ -33,19 +33,19 @@ func init() {
 }
 
 type CheckableCert interface {
-	Check(issuedToId []byte, overlayId []byte, dataSize int32, isFEC bool) (CertCheckResult, error)
+	Check(issuedToId []byte, overlayId []byte, dataSize uint32, isFEC bool) (CertCheckResult, error)
 }
 
 type CertificateEmpty struct{}
 
 type Certificate struct {
 	IssuedBy  any    `tl:"struct boxed [pub.ed25519]"`
-	ExpireAt  int32  `tl:"int"`
-	MaxSize   int32  `tl:"int"`
+	ExpireAt  uint32 `tl:"int"`
+	MaxSize   uint32 `tl:"int"`
 	Signature []byte `tl:"bytes"`
 }
 
-func (c Certificate) Check(issuedToId []byte, overlayId []byte, dataSize int32, isFEC bool) (CertCheckResult, error) {
+func (c Certificate) Check(issuedToId []byte, overlayId []byte, dataSize uint32, isFEC bool) (CertCheckResult, error) {
 	if dataSize > c.MaxSize {
 		return CertCheckResultForbidden, nil
 	}
@@ -63,7 +63,7 @@ func (c Certificate) Check(issuedToId []byte, overlayId []byte, dataSize int32, 
 		return CertCheckResultForbidden, err
 	}
 
-	issuer, ok := c.IssuedBy.(adnl.PublicKeyED25519)
+	issuer, ok := c.IssuedBy.(keys.PublicKeyED25519)
 	if !ok {
 		return CertCheckResultForbidden, fmt.Errorf("unsupported issuer key format")
 	}
@@ -77,27 +77,27 @@ func (c Certificate) Check(issuedToId []byte, overlayId []byte, dataSize int32, 
 type CertificateId struct {
 	OverlayID []byte `tl:"int256"`
 	Node      []byte `tl:"int256"`
-	ExpireAt  int32  `tl:"int"`
-	MaxSize   int32  `tl:"int"`
+	ExpireAt  uint32 `tl:"int"`
+	MaxSize   uint32 `tl:"int"`
 }
 
 type CertificateIdV2 struct {
 	OverlayID []byte `tl:"int256"`
 	Node      []byte `tl:"int256"`
-	ExpireAt  int32  `tl:"int"`
-	MaxSize   int32  `tl:"int"`
+	ExpireAt  uint32 `tl:"int"`
+	MaxSize   uint32 `tl:"int"`
 	Flags     int32  `tl:"int"`
 }
 
 type CertificateV2 struct {
 	IssuedBy  any    `tl:"struct boxed [pub.ed25519]"`
-	ExpireAt  int32  `tl:"int"`
-	MaxSize   int32  `tl:"int"`
+	ExpireAt  uint32 `tl:"int"`
+	MaxSize   uint32 `tl:"int"`
 	Flags     int32  `tl:"int"`
 	Signature []byte `tl:"bytes"`
 }
 
-func (c CertificateV2) Check(issuedToId []byte, overlayId []byte, dataSize int32, isFEC bool) (CertCheckResult, error) {
+func (c CertificateV2) Check(issuedToId []byte, overlayId []byte, dataSize uint32, isFEC bool) (CertCheckResult, error) {
 	if dataSize > c.MaxSize {
 		return CertCheckResultForbidden, nil
 	}
@@ -119,7 +119,7 @@ func (c CertificateV2) Check(issuedToId []byte, overlayId []byte, dataSize int32
 		return CertCheckResultForbidden, err
 	}
 
-	issuer, ok := c.IssuedBy.(adnl.PublicKeyED25519)
+	issuer, ok := c.IssuedBy.(keys.PublicKeyED25519)
 	if !ok {
 		return CertCheckResultForbidden, fmt.Errorf("unsupported issuer key format")
 	}
@@ -146,12 +146,12 @@ type BroadcastFEC struct {
 	Source      any    `tl:"struct boxed [pub.ed25519]"`
 	Certificate any    `tl:"struct boxed [overlay.emptyCertificate,overlay.certificate,overlay.certificateV2]"`
 	DataHash    []byte `tl:"int256"`
-	DataSize    int32  `tl:"int"`
+	DataSize    uint32 `tl:"int"`
 	Flags       int32  `tl:"int"`
 	Data        []byte `tl:"bytes"`
-	Seqno       int32  `tl:"int"`
+	Seqno       uint32 `tl:"int"`
 	FEC         any    `tl:"struct boxed [fec.roundRobin,fec.raptorQ,fec.online]"`
-	Date        int32  `tl:"int"`
+	Date        uint32 `tl:"int"`
 	Signature   []byte `tl:"bytes"`
 }
 
@@ -195,19 +195,19 @@ type BroadcastFECID struct {
 	Source   []byte `tl:"int256"`
 	Type     []byte `tl:"int256"`
 	DataHash []byte `tl:"int256"`
-	Size     int32  `tl:"int"`
+	Size     uint32 `tl:"int"`
 	Flags    int32  `tl:"int"`
 }
 
 type BroadcastFECPartID struct {
 	BroadcastHash []byte `tl:"int256"`
 	DataHash      []byte `tl:"int256"`
-	Seqno         int32  `tl:"int"`
+	Seqno         uint32 `tl:"int"`
 }
 
 type BroadcastToSign struct {
 	Hash []byte `tl:"int256"`
-	Date int32  `tl:"int"`
+	Date uint32 `tl:"int"`
 }
 
 type Node struct {
@@ -248,7 +248,7 @@ type FECCompleted struct {
 }
 
 func (n *Node) CheckSignature() error {
-	pub, ok := n.ID.(adnl.PublicKeyED25519)
+	pub, ok := n.ID.(keys.PublicKeyED25519)
 	if !ok {
 		return fmt.Errorf("unsupported id type %s", reflect.TypeOf(n.ID).String())
 	}
@@ -273,7 +273,7 @@ func (n *Node) CheckSignature() error {
 }
 
 func (n *Node) Sign(key ed25519.PrivateKey) error {
-	pub, ok := n.ID.(adnl.PublicKeyED25519)
+	pub, ok := n.ID.(keys.PublicKeyED25519)
 	if !ok {
 		return fmt.Errorf("unsupported id type %s", reflect.TypeOf(n.ID).String())
 	}
@@ -301,7 +301,7 @@ func (n *Node) Sign(key ed25519.PrivateKey) error {
 }
 
 func NewNode(overlay []byte, key ed25519.PrivateKey) (*Node, error) {
-	keyHash, err := tl.Hash(adnl.PublicKeyOverlay{
+	keyHash, err := tl.Hash(keys.PublicKeyOverlay{
 		Key: overlay,
 	})
 	if err != nil {
@@ -309,7 +309,7 @@ func NewNode(overlay []byte, key ed25519.PrivateKey) (*Node, error) {
 	}
 
 	oNode := Node{
-		ID:      adnl.PublicKeyED25519{Key: key.Public().(ed25519.PublicKey)},
+		ID:      keys.PublicKeyED25519{Key: key.Public().(ed25519.PublicKey)},
 		Overlay: keyHash,
 		Version: int32(time.Now().Unix()),
 	}

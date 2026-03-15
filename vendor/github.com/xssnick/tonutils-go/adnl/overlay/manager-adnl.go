@@ -7,12 +7,8 @@ import (
 	"fmt"
 	"github.com/xssnick/tonutils-go/adnl"
 	"github.com/xssnick/tonutils-go/tl"
-	"reflect"
 	"sync"
-	"time"
 )
-
-const _PacketWaitTime = 15 * time.Millisecond
 
 const _BroadcastFlagAnySender = 1
 
@@ -27,6 +23,7 @@ type ADNL interface {
 	SendCustomMessage(ctx context.Context, req tl.Serializable) error
 	Query(ctx context.Context, req, result tl.Serializable) error
 	Answer(ctx context.Context, queryID []byte, result tl.Serializable) error
+	GetCloserCtx() context.Context
 	RemoteAddr() string
 	GetID() []byte
 	Close()
@@ -139,11 +136,8 @@ func (a *ADNLWrapper) customHandler(msg *adnl.MessageCustom) error {
 
 		switch t := obj.(type) {
 		case Broadcast:
-			var gh any
-			_, _ = tl.Parse(&gh, t.Data, true)
-			println("BROADCAST", reflect.TypeOf(gh).String())
 		case BroadcastFECShort:
-			println("BROADCAST SHORT", t.Seqno, t.BroadcastHash)
+			// TODO:
 		case BroadcastFEC:
 			if err := o.processFECBroadcast(&t); err != nil {
 				return fmt.Errorf("failed to process FEC broadcast: %w", err)

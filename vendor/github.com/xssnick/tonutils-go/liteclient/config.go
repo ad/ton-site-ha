@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 var (
@@ -19,7 +20,14 @@ func GetConfigFromUrl(ctx context.Context, url string) (*GlobalConfig, error) {
 		return nil, err
 	}
 
+	if _, hasDeadline := ctx.Deadline(); !hasDeadline {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+	}
+
 	req = req.WithContext(ctx)
+	req.Header.Set("Accept", "*/*")
 
 	httpClient := http.DefaultClient
 
