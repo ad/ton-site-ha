@@ -23,7 +23,7 @@ import (
 
 	"github.com/xssnick/tonutils-go/adnl"
 	"github.com/xssnick/tonutils-go/adnl/dht"
-	rldphttp "github.com/xssnick/tonutils-go/adnl/rldp/http"
+	rldphttp "github.com/ad/ton-site-ha/internal/rldphttp"
 	"github.com/xssnick/tonutils-go/liteclient"
 )
 
