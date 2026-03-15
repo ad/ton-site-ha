@@ -9,6 +9,6 @@ require (
 )
 
 require (
-	filippo.io/edwards25519 v1.1.0 // indirect
+	filippo.io/edwards25519 v1.1.1 // indirect
 	github.com/xssnick/raptorq v1.3.0 // indirect
 )
