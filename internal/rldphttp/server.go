@@ -28,7 +28,7 @@ type ADNLGateway interface {
 	GetAddressList() address.List
 	Close() error
 	SetConnectionHandler(func(client adnl.Peer) error)
-	SetAddressList(addresses []*address.UDP)
+	SetAddressList(addresses []address.Address)
 	StartServer(listenAddr string, listenThreads ...int) error
 }
 
@@ -182,7 +182,10 @@ func (s *Server) ListenAndServe(listenAddr string) error {
 		if err == nil {
 			port, err := strconv.ParseInt(portStr, 10, 32)
 			if err == nil {
-				s.adnlServer.SetAddressList([]*address.UDP{{IP: s.externalIp, Port: int32(port)}})
+				addr, err := address.NewAddress(s.externalIp, int32(port))
+				if err == nil {
+					s.adnlServer.SetAddressList([]address.Address{addr})
+				}
 			}
 		}
 	}
@@ -205,20 +208,20 @@ func (s *Server) updateDHT(ctx context.Context) error {
 	addr := s.adnlServer.GetAddressList()
 
 	ctxStore, cancel := context.WithTimeout(ctx, 80*time.Second)
-	stored, id, err := s.dht.StoreAddress(ctxStore, addr, 15*time.Minute, s.key, 5)
+	stored, _, err := s.dht.StoreAddress(ctxStore, addr, 15*time.Minute, s.key)
 	cancel()
 	if err != nil && stored == 0 {
 		return err
 	}
 
 	// make sure it was saved
-	_, _, err = s.dht.FindAddresses(ctx, id)
+	_, _, err = s.dht.FindAddresses(ctx, s.id)
 	if err != nil {
 		return err
 	}
 
 	Logger("DHT ADNL address record for TON Site was refreshed successfully on", stored,
-		"nodes to ip", addr.Addresses[0].IP.String(), "with port", addr.Addresses[0].Port)
+		"nodes to ip", address.IPValue(addr.Addresses[0]).String(), "with port", address.PortValue(addr.Addresses[0]))
 	return nil
 }
 
