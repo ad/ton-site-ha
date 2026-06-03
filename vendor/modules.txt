@@ -20,7 +20,7 @@ github.com/sigurn/crc16
 ## explicit; go 1.25
 github.com/xssnick/raptorq
 github.com/xssnick/raptorq/internal/discmath
-# github.com/xssnick/tonutils-go v1.17.1
+# github.com/xssnick/tonutils-go v1.17.2
 ## explicit; go 1.25.0
 github.com/xssnick/tonutils-go/address
 github.com/xssnick/tonutils-go/adnl
