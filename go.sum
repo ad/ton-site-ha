@@ -8,5 +8,5 @@ github.com/sigurn/crc16 v0.0.0-20240131213347-83fcde1e29d1 h1:NVK+OqnavpyFmUiKfU
 github.com/sigurn/crc16 v0.0.0-20240131213347-83fcde1e29d1/go.mod h1:9/etS5gpQq9BJsJMWg1wpLbfuSnkm8dPF6FdW2JXVhA=
 github.com/xssnick/raptorq v1.4.0 h1:Bms8lgT7aEPRP8YBRuS+8w7Cic8GP9BbvFT1NrWvi24=
 github.com/xssnick/raptorq v1.4.0/go.mod h1:mo5n6T4yaqZkNVMWonRuMS0tcyD4XQ6PwwTjaY3ZwQY=
-github.com/xssnick/tonutils-go v1.17.1 h1:VQyQMApC60HztJGkNy1NlroPgIcdltRkI/+E3BvhAq0=
-github.com/xssnick/tonutils-go v1.17.1/go.mod h1:Ind3q0JM2N/63zfWR7rSGmUpUZaiGxregm9nZc/xGx4=
+github.com/xssnick/tonutils-go v1.17.2 h1:WMBjyqJsgnZuc3UU/shxia47DQLjK+3oJtK0Xx2qgIg=
+github.com/xssnick/tonutils-go v1.17.2/go.mod h1:Ind3q0JM2N/63zfWR7rSGmUpUZaiGxregm9nZc/xGx4=
