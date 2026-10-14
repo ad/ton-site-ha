@@ -2,7 +2,6 @@ package raptorq
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/xssnick/raptorq/internal/discmath"
 )
@@ -17,7 +16,6 @@ type encodingRow struct {
 }
 
 type raptorParams struct {
-	_K       uint32
 	_KPadded uint32
 	_J       uint32
 	_S       uint32
@@ -32,65 +30,61 @@ type raptorParams struct {
 	// J-derived LT tuple constants, see calcEncodingRow
 	_JA     uint32
 	_BLocal uint32
-
-	zeroSymbol []byte
 }
 
-type paramsCacheKey struct {
-	symbolSize uint32
-	dataSize   uint32
+// Every field of raptorParams derives from the ParamsTable row that K selects,
+// so there are only len(ParamsTable) distinct values and all of them are built
+// once here. K itself is the only K-dependent value and lives on the Encoder
+// and the Decoder instead, which keeps these shared, immutable and pointer
+// free, so they never take part in a GC mark.
+var paramsByRow = buildParamsByRow()
+
+func buildParamsByRow() []raptorParams {
+	all := make([]raptorParams, len(ParamsTable))
+	for i := range ParamsTable {
+		raw := &ParamsTable[i]
+		p := &all[i]
+
+		p._KPadded = raw.KPadded
+		p._J = raw.J
+		p._S = raw.S
+		p._H = raw.H
+		p._W = raw.W
+		p._L = raw.KPadded + raw.S + raw.H
+		p._B = raw.W - raw.S
+
+		p._P = p._L - p._W
+		p._U = p._P - p._H
+		p._P1 = p._P + 1
+
+		for !isPrime(p._P1) {
+			p._P1++
+		}
+
+		p._JA = 53591 + p._J*997
+		if p._JA%2 == 0 {
+			p._JA++
+		}
+		p._BLocal = 10267 * (p._J + 1)
+	}
+	return all
 }
 
-var paramsCache sync.Map
-
-func (r *RaptorQ) calcParams(dataSize uint32) (*raptorParams, error) {
+// calcParams returns the shared params for dataSize together with K, the number
+// of source symbols. The returned params are immutable and shared by every
+// caller, so anything sized by the symbol size belongs to the caller.
+func (r *RaptorQ) calcParams(dataSize uint32) (*raptorParams, uint32, error) {
 	if r.symbolSz == 0 {
-		return nil, fmt.Errorf("symbol size cannot be zero")
-	}
-
-	key := paramsCacheKey{
-		symbolSize: r.symbolSz,
-		dataSize:   dataSize,
-	}
-	if cached, ok := paramsCache.Load(key); ok {
-		return cached.(*raptorParams), nil
+		return nil, 0, fmt.Errorf("symbol size cannot be zero")
 	}
 
 	k := (dataSize + r.symbolSz - 1) / r.symbolSz
-	raw, err := calcRawParams(k)
-	if err != nil {
-		return nil, fmt.Errorf("failed to calc params: %w", err)
+	i := rawParamsIndex(k)
+	if i < 0 {
+		return nil, 0, fmt.Errorf("failed to calc params: %w", errKTooBig)
 	}
 
-	p := &raptorParams{
-		_K:       k,
-		_KPadded: raw.KPadded,
-		_J:       raw.J,
-		_S:       raw.S,
-		_H:       raw.H,
-		_W:       raw.W,
-		_L:       raw.KPadded + raw.S + raw.H,
-		_B:       raw.W - raw.S,
-
-		zeroSymbol: make([]byte, r.symbolSz),
-	}
-
-	p._P = p._L - p._W
-	p._U = p._P - p._H
-	p._P1 = p._P + 1
-
-	for !isPrime(p._P1) {
-		p._P1++
-	}
-
-	p._JA = 53591 + p._J*997
-	if p._JA%2 == 0 {
-		p._JA++
-	}
-	p._BLocal = 10267 * (p._J + 1)
-
-	actual, _ := paramsCache.LoadOrStore(key, p)
-	return actual.(*raptorParams), nil
+	return &paramsByRow[i], k, nil
 }
 
 var degreeDistribution = [...]uint32{
@@ -140,31 +134,32 @@ func (p *raptorParams) calcEncodingRow(x uint32) encodingRow {
 	}
 }
 
-// hdpcMultiply computes the HDPC rows for v; ab holds the precomputed
-// (a, b) random row pairs for every column (see the hdpcAB block in solve),
-// they depend only on the column index so they are shared between calls.
-func (p *raptorParams) hdpcMultiply(arena *matrixArena, v *discmath.MatrixGF256, ab []uint32) *discmath.MatrixGF256 {
-	alpha := discmath.OctExp(1) // == 2, so RowAddMul never hits its 0/1 fast paths
-	prev := v.GetRow(0)
-	for i := uint32(1); i < v.RowsNum(); i++ {
-		cur := v.GetRow(i)
-		discmath.OctVecMulAdd(cur, prev, alpha)
-		prev = cur
+// hdpcStream overwrites u (H rows) with HDPC * v, where v has K'+S rows and
+// row col of v is rowAt(col), nil for a zero row. ab holds the precomputed
+// (a, b) MT row pairs of every column but the last (see the hdpcAB block in
+// solve), acc is a len(u row) scratch.
+//
+// HDPC = MT * GAMMA with GAMMA[i][j] = alpha^(i-j) for i >= j, so
+// (GAMMA v)_col = alpha*(GAMMA v)_{col-1} ^ v_col: the chain is kept in the
+// single accumulator row and each v row is read once, v is never built.
+func (p *raptorParams) hdpcStream(u *discmath.MatrixGF256, acc []byte, ab []uint32, rowAt func(col uint32) []byte) {
+	clear(u.Data)
+	clear(acc)
+
+	last := p._KPadded + p._S - 1
+	for col := uint32(0); col < last; col++ {
+		discmath.OctHdpcStep(acc, rowAt(col), u.GetRow(ab[2*col]), u.GetRow(ab[2*col+1]))
 	}
 
-	u := arena.newGF256(p._H, v.ColsNum())
-	last := v.GetRow(v.RowsNum() - 1)
-	u.RowSet(0, last) // OctExp(0) == 1 and the row is zeroed
+	// the last MT column is alpha^i in row i instead of an (a, b) pair
+	discmath.OctVecMul(acc, discmath.OctExp(1))
+	if v := rowAt(last); v != nil {
+		discmath.OctVecAdd(acc, v)
+	}
+	u.RowAdd(0, acc) // OctExp(0) == 1
 	for i := uint32(1); i < p._H; i++ {
-		u.RowAddMul(i, last, discmath.OctExp(i%255))
+		u.RowAddMul(i, acc, discmath.OctExp(i%255))
 	}
-
-	for col := uint32(0); col+1 < v.RowsNum(); col++ {
-		row := v.GetRow(col)
-		u.RowAdd(ab[2*col], row)
-		u.RowAdd(ab[2*col+1], row)
-	}
-	return u
 }
 
 func (r *encodingRow) Size() uint32 {
@@ -215,14 +210,18 @@ func (r *encodingRow) encode(aUpper *upperMatrixBuilder, ri uint32, p *raptorPar
 func (r encodingRow) encodeGen(dst []byte, relaxed *discmath.MatrixGF256, p *raptorParams) {
 	w, p1, pp := p._W, p._P1, p._P
 
+	// d <= 30 and d1 <= 3, so the row list stays on the stack
+	var buf [33]uint32
+	rows := buf[:0]
+
 	b := r.b
-	copy(dst, relaxed.GetRow(b))
+	rows = append(rows, b)
 	for j := uint32(1); j < r.d; j++ {
 		b += r.a
 		if b >= w {
 			b -= w
 		}
-		discmath.OctVecAdd(dst, relaxed.GetRow(b))
+		rows = append(rows, b)
 	}
 
 	b1 := r.b1
@@ -233,7 +232,7 @@ func (r encodingRow) encodeGen(dst []byte, relaxed *discmath.MatrixGF256, p *rap
 		}
 	}
 
-	discmath.OctVecAdd(dst, relaxed.GetRow(w+b1))
+	rows = append(rows, w+b1)
 	for j := uint32(1); j < r.d1; j++ {
 		b1 += r.a1
 		if b1 >= p1 {
@@ -245,8 +244,10 @@ func (r encodingRow) encodeGen(dst []byte, relaxed *discmath.MatrixGF256, p *rap
 				b1 -= p1
 			}
 		}
-		discmath.OctVecAdd(dst, relaxed.GetRow(w+b1))
+		rows = append(rows, w+b1)
 	}
+
+	discmath.OctVecAddRowsTo(dst, nil, relaxed, rows)
 }
 
 func (p *raptorParams) genSymbol(relaxed *discmath.MatrixGF256, symbolSz, id uint32) []byte {
