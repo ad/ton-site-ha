@@ -6,7 +6,7 @@ filippo.io/edwards25519/field
 ## explicit; go 1.12
 github.com/joho/godotenv
 github.com/joho/godotenv/autoload
-# github.com/pierrec/lz4/v4 v4.1.27
+# github.com/pierrec/lz4/v4 v4.1.28
 ## explicit; go 1.17
 github.com/pierrec/lz4/v4
 github.com/pierrec/lz4/v4/internal/lz4block
@@ -16,11 +16,11 @@ github.com/pierrec/lz4/v4/internal/xxh32
 # github.com/sigurn/crc16 v0.0.0-20240131213347-83fcde1e29d1
 ## explicit
 github.com/sigurn/crc16
-# github.com/xssnick/raptorq v1.5.0
+# github.com/xssnick/raptorq v1.6.0
 ## explicit; go 1.25
 github.com/xssnick/raptorq
 github.com/xssnick/raptorq/internal/discmath
-# github.com/xssnick/tonutils-go v1.18.0
+# github.com/xssnick/tonutils-go v1.19.0
 ## explicit; go 1.26.0
 github.com/xssnick/tonutils-go/address
 github.com/xssnick/tonutils-go/adnl
@@ -31,6 +31,19 @@ github.com/xssnick/tonutils-go/adnl/overlay
 github.com/xssnick/tonutils-go/adnl/rldp
 github.com/xssnick/tonutils-go/adnl/rldp/roundrobin
 github.com/xssnick/tonutils-go/crc16
+github.com/xssnick/tonutils-go/internal/bigint
 github.com/xssnick/tonutils-go/liteclient
 github.com/xssnick/tonutils-go/tl
 github.com/xssnick/tonutils-go/tvm/cell
+# golang.org/x/net v0.59.0
+## explicit; go 1.26.0
+golang.org/x/net/bpf
+golang.org/x/net/internal/iana
+golang.org/x/net/internal/socket
+golang.org/x/net/ipv4
+golang.org/x/net/ipv6
+# golang.org/x/sys v0.48.0
+## explicit; go 1.26.0
+golang.org/x/sys/cpu
+golang.org/x/sys/unix
+golang.org/x/sys/windows
